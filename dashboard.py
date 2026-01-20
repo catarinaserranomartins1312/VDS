@@ -133,7 +133,7 @@ with col3:
                           "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
                       },
                       title=f"Health Expenditure vs. Prevalence of Undernourishment ({selected_year})")
-    st.plotly_chart(fig3, use_container_width=True)
+    # st.plotly_chart(fig3, use_container_width=True)
 
     st.plotly_chart(
         fig3,
@@ -162,7 +162,7 @@ with col4:
                           "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
                       },
                       title=f"Health Expenditure vs. Neonatal Mortality ({selected_year})")
-    st.plotly_chart(fig4, use_container_width=True)
+    # st.plotly_chart(fig4, use_container_width=True)
 
     st.plotly_chart(
         fig4,
@@ -194,6 +194,7 @@ if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
     st.experimental_rerun()
 ## new
+
 
 
 
