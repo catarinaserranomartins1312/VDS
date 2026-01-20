@@ -12,6 +12,7 @@ def load_data():
     return df
 
 df = load_data()
+st.write(df.columns)
 
 # 3. Sidebar for Interaction
 st.sidebar.header("Filter Options")
@@ -61,3 +62,4 @@ with col4:
     fig4 = px.imshow(filtered_df.corr(), text_auto=True, aspect="auto")
 
     st.plotly_chart(fig4, use_container_width=True)
+
