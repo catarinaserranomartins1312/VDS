@@ -100,7 +100,7 @@ with col3:
 
 #Insight 4: Influence on Neonatal Mortality
 with col4:
-    st.subheader("3. Spending vs. Neonatal Mortality")
+    st.subheader("4. Spending vs. Neonatal Mortality")
     st.markdown("*Impact of spending on Neonatal Mortality.*")
     
     undernourishment_col = [c for c in df.columns if "neonatal_mortality" in c][0]
@@ -119,7 +119,7 @@ with col4:
 
 #Insight 5: Correlation Matrix ---
 with col5:
-    st.subheader("4. Global Correlations")
+    st.subheader("5. Global Correlations")
     st.markdown("*Heatmap of the relationship between all numerical features.*")
     
     # Select only numeric columns to avoid errors
@@ -128,6 +128,7 @@ with col5:
     
     fig4 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
     st.plotly_chart(fig4, use_container_width=True)
+
 
 
 
