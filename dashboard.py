@@ -60,7 +60,7 @@ with col1:
     st.markdown("*Does higher spending lead to longer lives?*")
     
     # Scatter: Expenditure vs Life Expectancy
-    fig1 = px.scatter(year_df, 
+    fig1 = px.scatter(brushed_df, 
                       x="Health expenditure per capita - Total", 
                       y="life_expect", 
                       color="country_x", 
@@ -90,7 +90,7 @@ with col2:
     st.markdown("*Impact of spending on Infant Mortality.*")
     
     # Scatter: Expenditure vs Infant Mortality
-    fig2 = px.scatter(year_df, 
+    fig2 = px.scatter(brushed_df, 
                       x="Health expenditure per capita - Total", 
                       y="infant_mortality", # Using your actual column name
                       color="country_x",
@@ -123,7 +123,7 @@ with col3:
     
     undernourishment_col = [c for c in df.columns if "prev_unde" in c][0]
 
-    fig3 = px.scatter(year_df, 
+    fig3 = px.scatter(brushed_df, 
                       x="Health expenditure per capita - Total", 
                       y="prev_undernourishment",
                       color="country_x",
@@ -152,7 +152,7 @@ with col4:
     
     undernourishment_col = [c for c in df.columns if "neonatal_mortality" in c][0]
 
-    fig4 = px.scatter(year_df, 
+    fig4 = px.scatter(brushed_df, 
                       x="Health expenditure per capita - Total", 
                       y="neonatal_mortality",
                       color="country_x",
@@ -183,7 +183,7 @@ with col5:
     st.markdown("*Heatmap of the relationship between all numerical features.*")
     
     # Select only numeric columns to avoid errors
-    numeric_df = filtered_df.select_dtypes(include=['float64', 'int64'])
+    numeric_df = brushed_df.select_dtypes(include=['float64', 'int64'])
     corr = numeric_df.corr()
     
     fig5 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
@@ -194,6 +194,7 @@ if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
     st.experimental_rerun()
 ## new
+
 
 
 
