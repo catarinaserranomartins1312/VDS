@@ -169,7 +169,7 @@ with col4:
         use_container_width=True,
         selection_mode="points",
         on_select="rerun",
-        key="fig3"
+        key="fig4"
     )
 
     update_brush("fig4")
@@ -191,6 +191,7 @@ if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
     st.experimental_rerun()
 ## new
+
 
 
 
