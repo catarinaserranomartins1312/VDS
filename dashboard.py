@@ -174,6 +174,9 @@ with col4:
 
     update_brush("fig4")
 
+# Row 3
+col5, col6 = st.columns(2)
+
 #Insight 5: Correlation Matrix ---
 with col5:
     st.subheader("5. Global Correlations")
@@ -191,6 +194,7 @@ if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
     st.experimental_rerun()
 ## new
+
 
 
 
