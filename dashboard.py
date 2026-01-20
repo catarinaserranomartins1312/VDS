@@ -81,7 +81,7 @@ with col1:
         key="fig1"
     )
     
-    update_brush("fig1"
+    update_brush("fig1")
     ## new
 
 #Insight 2: Influence on Mortality
@@ -191,6 +191,7 @@ if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
     st.experimental_rerun()
 ## new
+
 
 
 
