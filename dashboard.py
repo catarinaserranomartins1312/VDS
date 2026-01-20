@@ -2,64 +2,90 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. Page Configuration (The "One Screen" Setup)
-st.set_page_config(layout="wide", page_title="Relationship between Countries' Health Expenditure and Healthcare Indicators")
+# 1. Page Configuration (Must be the first command)
+st.set_page_config(layout="wide", page_title="Health Expenditure Dashboard")
 
+# --- SESSION STATE INITIALIZATION ---
 if "selected_indices" not in st.session_state:
     st.session_state.selected_indices = None
 
+# Logic to maintain the Country Filter selection so it doesn't reset
+if "country_selection" not in st.session_state:
+    st.session_state["country_selection"] = []  # Will be filled after data load
+
+# --- HELPER FUNCTIONS ---
+
+# Function to update the "Brush" (selection)
 def update_brush(fig_key):
+    # Get the selection state from the specific chart (fig_key)
     sel = st.session_state.get(fig_key, {}).get("selection", {})
     points = sel.get("points", [])
+    
+    # Update global selected_indices if points are found
     if points:
+        # FIX: Changed "pointIndex" to "point_index" (snake_case fix)
         st.session_state.selected_indices = [p["point_index"] for p in points]
 
-# 2. Load Your Data (Cache it so it doesn't reload every interaction)
+# 2. Load Data
 @st.cache_data
 def load_data():
+    # Ensure this matches your exact filename in GitHub
     df = pd.read_csv("merged_health_data.csv")
     return df
 
 df = load_data()
-#st.write(df.columns)
 
+# --- SIDEBAR FILTERS ---
+
+st.sidebar.header("Filter Options")
+
+# 1. Country Filter (with Persistence Fix)
 all_countries = df['country_x'].unique()
+
+# If session state is empty (first run), set default to first 5 countries
+if not st.session_state["country_selection"]:
+    st.session_state["country_selection"] = all_countries[:5].tolist()
+
 selected_countries = st.sidebar.multiselect(
     "Select Countries to Compare:", 
     options=all_countries, 
-    default=all_countries[:5] 
+    default=st.session_state["country_selection"], 
+    key="country_selection" # This key tells Streamlit to track this widget
 )
 
-# Year Filter (Slider is better for time)
+# 2. Year Filter
 min_year = int(df['year'].min())
 max_year = int(df['year'].max())
 selected_year = st.sidebar.slider("Select Year", min_year, max_year, max_year)
 
-# Filter the dataframe based on selection
+# --- FILTERING LOGIC ---
+
+# Step 1: Filter by Sidebar
 filtered_df = df[df['country_x'].isin(selected_countries)]
-# specific slice for the selected year for the scatter plots
 year_df = filtered_df[filtered_df['year'] == selected_year]
 
-def apply_brush(df):
+# Step 2: Apply Brush (Highlighting logic)
+def apply_brush(input_df):
     if st.session_state.selected_indices is None:
-        return df
-    return df.iloc[st.session_state.selected_indices]
+        return input_df
+    # Filter based on the indices of the points selected in the charts
+    return input_df.iloc[st.session_state.selected_indices]
 
 brushed_df = apply_brush(year_df)
 
-# 4. Main Dashboard Area
+# --- DASHBOARD LAYOUT ---
+
 st.title("Analysis: Health Expenditure vs. Health Indicators")
 st.markdown(f"Exploring the relationship between healthcare spending and health maternal and infant indicators for the year **{selected_year}**.")
 
-# Grid with 2 columns
+# Grid: Row 1
 col1, col2 = st.columns(2)
 
-#Insight 1: The Preston Curve
+# Insight 1: The Preston Curve
 with col1:
     st.subheader("1. Preston Curve Variation")
     st.markdown("*Does higher spending lead to longer lives?*")
     
-    # Scatter: Expenditure vs Life Expectancy
     fig1 = px.scatter(brushed_df, 
                       x="Health expenditure per capita - Total", 
                       y="life_expect", 
@@ -67,12 +93,12 @@ with col1:
                       size="life_expect", 
                       labels={
                           "life_expect": "Life Expectancy (Years)",
-                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD)"
                       },
                       hover_name="country_x",
-                      title=f"Health Expenditure vs. Life Expectancy ({selected_year})")
-    # st.plotly_chart(fig1, use_container_width=True)
-
+                      title=f"Expenditure vs. Life Expectancy ({selected_year})")
+    
+    # Interaction Layer
     st.plotly_chart(
         fig1,
         use_container_width=True,
@@ -80,29 +106,25 @@ with col1:
         on_select="rerun",
         key="fig1"
     )
-    
     update_brush("fig1")
-    ## new
 
-#Insight 2: Influence on Mortality
+# Insight 2: Influence on Infant Mortality
 with col2:
-    st.subheader("2. Spending vs. Mortality")
+    st.subheader("2. Spending vs. Infant Mortality")
     st.markdown("*Impact of spending on Infant Mortality.*")
     
-    # Scatter: Expenditure vs Infant Mortality
     fig2 = px.scatter(brushed_df, 
                       x="Health expenditure per capita - Total", 
-                      y="infant_mortality", # Using your actual column name
+                      y="infant_mortality", 
                       color="country_x",
                       size="infant_mortality",
-                      labels = {
+                      labels={
                           "infant_mortality": "Infant Mortality",
-                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD)"
                       },
                       hover_name="country_x",
-                      title=f"Health Expenditure vs. Infant Mortality ({selected_year})")
-    # st.plotly_chart(fig2, use_container_width=True)
-
+                      title=f"Expenditure vs. Infant Mortality ({selected_year})")
+    
     st.plotly_chart(
         fig2,
         use_container_width=True,
@@ -110,31 +132,31 @@ with col2:
         on_select="rerun",
         key="fig2"
     )
-
     update_brush("fig2")
 
-# Row 2
+# Grid: Row 2
 col3, col4 = st.columns(2)
 
-#Insight 3: Influence on Malnourishment
+# Insight 3: Influence on Malnourishment
 with col3:
-    st.subheader("3. Spending vs. Prevalence of Undernourishment")
+    st.subheader("3. Spending vs. Undernourishment")
     st.markdown("*Impact of spending on Undernourishment.*")
     
-    undernourishment_col = [c for c in df.columns if "prev_unde" in c][0]
+    # Safe column finder
+    undernourish_cols = [c for c in df.columns if "prev_unde" in c]
+    y_col_3 = undernourish_cols[0] if undernourish_cols else "life_expect" # Fallback
 
     fig3 = px.scatter(brushed_df, 
                       x="Health expenditure per capita - Total", 
-                      y="prev_undernourishment",
+                      y=y_col_3,
                       color="country_x",
                       hover_name="country_x",
-                      labels = {
-                          "prev_undernourishment": "Prevalence of Undernourishment",
-                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
+                      labels={
+                          y_col_3: "Prevalence of Undernourishment",
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD)"
                       },
-                      title=f"Health Expenditure vs. Prevalence of Undernourishment ({selected_year})")
-    # st.plotly_chart(fig3, use_container_width=True)
-
+                      title=f"Expenditure vs. Undernourishment ({selected_year})")
+    
     st.plotly_chart(
         fig3,
         use_container_width=True,
@@ -142,28 +164,28 @@ with col3:
         on_select="rerun",
         key="fig3"
     )
-
     update_brush("fig3")
 
-#Insight 4: Influence on Neonatal Mortality
+# Insight 4: Influence on Neonatal Mortality
 with col4:
     st.subheader("4. Spending vs. Neonatal Mortality")
     st.markdown("*Impact of spending on Neonatal Mortality.*")
     
-    undernourishment_col = [c for c in df.columns if "neonatal_mortality" in c][0]
+    # Safe column finder
+    neonatal_cols = [c for c in df.columns if "neonatal_mortality" in c]
+    y_col_4 = neonatal_cols[0] if neonatal_cols else "infant_mortality" # Fallback
 
     fig4 = px.scatter(brushed_df, 
                       x="Health expenditure per capita - Total", 
-                      y="neonatal_mortality",
+                      y=y_col_4,
                       color="country_x",
                       hover_name="country_x",
-                      labels = {
-                          "neonatal_mortality": "Neonatal Mortality",
-                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
+                      labels={
+                          y_col_4: "Neonatal Mortality",
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD)"
                       },
-                      title=f"Health Expenditure vs. Neonatal Mortality ({selected_year})")
-    # st.plotly_chart(fig4, use_container_width=True)
-
+                      title=f"Expenditure vs. Neonatal Mortality ({selected_year})")
+    
     st.plotly_chart(
         fig4,
         use_container_width=True,
@@ -171,32 +193,27 @@ with col4:
         on_select="rerun",
         key="fig4"
     )
-
     update_brush("fig4")
 
-# Row 3
+# Grid: Row 3 (Heatmap)
 col5, col6 = st.columns(2)
 
-#Insight 5: Correlation Matrix ---
 with col5:
     st.subheader("5. Global Correlations")
     st.markdown("*Heatmap of the relationship between all numerical features.*")
     
-    # Select only numeric columns to avoid errors
+    # Only use numeric columns for correlation to avoid errors
     numeric_df = brushed_df.select_dtypes(include=['float64', 'int64'])
     corr = numeric_df.corr()
     
     fig5 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
     st.plotly_chart(fig5, use_container_width=True)
-## new
+
+# --- CLEAR BUTTON ---
 st.markdown("---")
 if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
-    st.rerun()
-    
-## new
-
-
+    st.rerun() # FIX: Updated from st.experimental_rerun()
 
 
 
