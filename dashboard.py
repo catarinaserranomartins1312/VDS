@@ -5,6 +5,9 @@ import plotly.express as px
 # 1. Page Configuration (The "One Screen" Setup)
 st.set_page_config(layout="wide", page_title="Relationship between Countries' Health Expenditure and Healthcare Indicators")
 
+if "selected_indices" not in st.session_state:
+    st.session_state.selected_indices = None
+
 # 2. Load Your Data (Cache it so it doesn't reload every interaction)
 @st.cache_data
 def load_data():
@@ -28,14 +31,21 @@ selected_year = st.sidebar.slider("Select Year", min_year, max_year, max_year)
 
 # Filter the dataframe based on selection
 filtered_df = df[df['country_x'].isin(selected_countries)]
-# We create a specific slice for the selected year for the scatter plots
+# specific slice for the selected year for the scatter plots
 year_df = filtered_df[filtered_df['year'] == selected_year]
+
+def apply_brush(df):
+    if st.session_state.selected_indices is None:
+        return df
+    return df.iloc[st.session_state.selected_indices]
+
+brushed_df = apply_brush(year_df)
 
 # 4. Main Dashboard Area
 st.title("Analysis: Health Expenditure vs. Health Indicators")
 st.markdown(f"Exploring the relationship between healthcare spending and health maternal and infant indicators for the year **{selected_year}**.")
 
-# Layout: Grid with 2 columns
+# Grid with 2 columns
 col1, col2 = st.columns(2)
 
 #Insight 1: The Preston Curve
@@ -56,6 +66,20 @@ with col1:
                       hover_name="country_x",
                       title=f"Health Expenditure vs. Life Expectancy ({selected_year})")
     st.plotly_chart(fig1, use_container_width=True)
+    ## new
+    event1 = st.plotly_chart(
+        fig1,
+        use_container_width=True,
+        selection_mode="points",
+        on_select="rerun",
+        key="fig1"
+    )
+
+    if event1 and event1["points"]:
+        st.session_state.selected_indices = [
+            p["pointIndex"] for p in event1["points"]
+        ]
+    ## new
 
 #Insight 2: Influence on Mortality
 with col2:
@@ -75,6 +99,19 @@ with col2:
                       hover_name="country_x",
                       title=f"Health Expenditure vs. Infant Mortality ({selected_year})")
     st.plotly_chart(fig2, use_container_width=True)
+
+    event2 = st.plotly_chart(
+        fig2,
+        use_container_width=True,
+        selection_mode="points",
+        on_select="rerun",
+        key="fig2"
+    )
+
+    if event2 and event2["points"]:
+        st.session_state.selected_indices = [
+            p["pointIndex"] for p in event2["points"]
+        ]
 
 # Row 2
 col3, col4 = st.columns(2)
@@ -98,6 +135,19 @@ with col3:
                       title=f"Health Expenditure vs. Prevalence of Undernourishment ({selected_year})")
     st.plotly_chart(fig3, use_container_width=True)
 
+    event3 = st.plotly_chart(
+        fig3,
+        use_container_width=True,
+        selection_mode="points",
+        on_select="rerun",
+        key="fig3"
+    )
+
+    if event3 and event3["points"]:
+        st.session_state.selected_indices = [
+            p["pointIndex"] for p in event3["points"]
+        ]
+
 #Insight 4: Influence on Neonatal Mortality
 with col4:
     st.subheader("4. Spending vs. Neonatal Mortality")
@@ -105,7 +155,7 @@ with col4:
     
     undernourishment_col = [c for c in df.columns if "neonatal_mortality" in c][0]
 
-    fig3 = px.scatter(year_df, 
+    fig4 = px.scatter(year_df, 
                       x="Health expenditure per capita - Total", 
                       y="neonatal_mortality",
                       color="country_x",
@@ -115,7 +165,20 @@ with col4:
                           "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
                       },
                       title=f"Health Expenditure vs. Neonatal Mortality ({selected_year})")
-    st.plotly_chart(fig3, use_container_width=True)
+    st.plotly_chart(fig4, use_container_width=True)
+
+    event4 = st.plotly_chart(
+        fig4,
+        use_container_width=True,
+        selection_mode="points",
+        on_select="rerun",
+        key="fig4"
+    )
+
+    if event4 and event4["points"]:
+        st.session_state.selected_indices = [
+            p["pointIndex"] for p in event4["points"]
+        ]
 
 #Insight 5: Correlation Matrix ---
 with col5:
@@ -126,10 +189,14 @@ with col5:
     numeric_df = filtered_df.select_dtypes(include=['float64', 'int64'])
     corr = numeric_df.corr()
     
-    fig4 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
-    st.plotly_chart(fig4, use_container_width=True)
-
-
+    fig5 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
+    st.plotly_chart(fig5, use_container_width=True)
+## new
+st.markdown("---")
+if st.button("🔄 Clear Selection"):
+    st.session_state.selected_indices = None
+    st.experimental_rerun()
+## new
 
 
 
