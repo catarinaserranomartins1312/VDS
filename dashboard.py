@@ -14,54 +14,89 @@ def load_data():
 df = load_data()
 st.write(df.columns)
 
-# 3. Sidebar for Interaction
-st.sidebar.header("Filter Options")
-# Example: Filter by category
-selected_category = st.sidebar.multiselect(
-    "Select Category:",
-    options=df["Health expenditure per capita - Total"].unique(),
-    default=df["life_expect"].unique()
+all_countries = df['country_x'].unique()
+selected_countries = st.sidebar.multiselect(
+    "Select Countries to Compare:", 
+    options=all_countries, 
+    default=all_countries[:5] 
 )
+
+# Year Filter (Slider is better for time)
+min_year = int(df['year'].min())
+max_year = int(df['year'].max())
+selected_year = st.sidebar.slider("Select Year", min_year, max_year, max_year)
+
 # Filter the dataframe based on selection
-filtered_df = df[df["category"].isin(selected_category)]
+filtered_df = df[df['country_x'].isin(selected_countries)]
+# We create a specific slice for the selected year for the scatter plots
+year_df = filtered_df[filtered_df['year'] == selected_year]
 
 # 4. Main Dashboard Area
-st.title("Project Findings Dashboard")
-st.markdown("This dashboard visualizes key insights from the Profiling and Modeling stages.")
+st.title("Analysis: Health Expenditure vs. Health Outcomes")
+st.markdown(f"Exploring relationships between spending and health indicators for the year **{selected_year}**.")
 
-# Layout: Create columns for a grid view
+# Layout: Grid with 2 columns
 col1, col2 = st.columns(2)
 
-# Visualization 1: Feature Distribution (Wrangle/Profile Stage)
+# --- Insight 1: The Preston Curve ---
 with col1:
-    st.subheader("1. Distribution of Key Feature")
-    fig1 = px.histogram(filtered_df, x="feature_x", color="category", 
-                        title="Distribution with Color Encoding")
+    st.subheader("1. The Preston Curve Variation")
+    st.markdown("*Does higher spending lead to longer lives?*")
+    
+    # Scatter: Expenditure vs Life Expectancy
+    fig1 = px.scatter(year_df, 
+                      x="Health expenditure per capita - Total", 
+                      y="life_expect", 
+                      color="country_x", 
+                      size="life_expect", # Bubbles sized by life expectancy
+                      hover_name="country_x",
+                      title=f"Expenditure vs. Life Expectancy ({selected_year})")
     st.plotly_chart(fig1, use_container_width=True)
 
-# Visualization 2: Correlation/Scatter (Wrangle Stage)
+# --- Insight 2: Influence on Mortality ---
 with col2:
-    st.subheader("2. Relationship between X and Y")
-    fig2 = px.scatter(filtered_df, x="feature_x", y="feature_y", 
-                      color="category", size="importance_metric",
-                      hover_data=['id'])
+    st.subheader("2. Spending vs. Mortality")
+    st.markdown("*Impact of spending on Infant Mortality.*")
+    
+    # Scatter: Expenditure vs Infant Mortality
+    fig2 = px.scatter(year_df, 
+                      x="Health expenditure per capita - Total", 
+                      y="infant_mortality", # Using your actual column name
+                      color="country_x",
+                      size="infant_mortality",
+                      hover_name="country_x",
+                      title=f"Expenditure vs. Infant Mortality ({selected_year})")
     st.plotly_chart(fig2, use_container_width=True)
 
-# Visualization 3: Model Performance (Model Stage)
+# Row 2
 col3, col4 = st.columns(2)
+
+# --- Insight 3: Influence on Malnourishment ---
 with col3:
-    st.subheader("3. Model Predictions vs Actual")
-    # Assuming you have prediction columns in your dataframe
-    fig3 = px.line(filtered_df, x="date", y=["actual", "predicted"],
-                   title="Model Accuracy Over Time")
+    st.subheader("3. Spending vs. Malnourishment")
+    st.markdown("*Impact of spending on Undernourishment.*")
+    
+    # Note: I am inferring the full name from your snippet 'prev_unde...'
+    # Ideally, this column is named 'prev_undernourishment' or similar.
+    # If this chart fails, check the exact spelling of this column name.
+    undernourishment_col = [c for c in df.columns if "prev_unde" in c][0]
+
+    fig3 = px.scatter(year_df, 
+                      x="Health expenditure per capita - Total", 
+                      y=undernourishment_col,
+                      color="country_x",
+                      hover_name="country_x",
+                      title=f"Expenditure vs. {undernourishment_col} ({selected_year})")
     st.plotly_chart(fig3, use_container_width=True)
 
-# Visualization 4: Interesting Feature/Heatmap
+# --- Insight 4: Correlation Matrix ---
 with col4:
-    st.subheader("4. Correlation Heatmap")
-    fig4 = px.imshow(filtered_df.corr(), text_auto=True, aspect="auto")
-
+    st.subheader("4. Global Correlations")
+    st.markdown("*Heatmap of relationships between all numerical features.*")
+    
+    # Select only numeric columns to avoid errors
+    numeric_df = filtered_df.select_dtypes(include=['float64', 'int64'])
+    corr = numeric_df.corr()
+    
+    fig4 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
     st.plotly_chart(fig4, use_container_width=True)
-
-
-
