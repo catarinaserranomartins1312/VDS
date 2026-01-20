@@ -32,15 +32,15 @@ filtered_df = df[df['country_x'].isin(selected_countries)]
 year_df = filtered_df[filtered_df['year'] == selected_year]
 
 # 4. Main Dashboard Area
-st.title("Analysis: Health Expenditure vs. Health Outcomes")
-st.markdown(f"Exploring relationships between spending and health indicators for the year **{selected_year}**.")
+st.title("Analysis: Health Expenditure vs. Health Indicators")
+st.markdown(f"Exploring the relationship between healthcare spending and health maternal and infant indicators for the year **{selected_year}**.")
 
 # Layout: Grid with 2 columns
 col1, col2 = st.columns(2)
 
-# --- Insight 1: The Preston Curve ---
+#Insight 1: The Preston Curve
 with col1:
-    st.subheader("1. The Preston Curve Variation")
+    st.subheader("1. Preston Curve Variation")
     st.markdown("*Does higher spending lead to longer lives?*")
     
     # Scatter: Expenditure vs Life Expectancy
@@ -48,12 +48,16 @@ with col1:
                       x="Health expenditure per capita - Total", 
                       y="life_expect", 
                       color="country_x", 
-                      size="life_expect", # Bubbles sized by life expectancy
+                      size="life_expect", 
+                      labels = {
+                          "life_expect": "Life Expectancy (Years)",
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
+                      }
                       hover_name="country_x",
-                      title=f"Expenditure vs. Life Expectancy ({selected_year})")
+                      title=f"Health Expenditure vs. Life Expectancy ({selected_year})")
     st.plotly_chart(fig1, use_container_width=True)
 
-# --- Insight 2: Influence on Mortality ---
+#Insight 2: Influence on Mortality
 with col2:
     st.subheader("2. Spending vs. Mortality")
     st.markdown("*Impact of spending on Infant Mortality.*")
@@ -64,35 +68,40 @@ with col2:
                       y="infant_mortality", # Using your actual column name
                       color="country_x",
                       size="infant_mortality",
+                      labels = {
+                          "infant_mortality": "Infant Mortality",
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
+                      }
                       hover_name="country_x",
-                      title=f"Expenditure vs. Infant Mortality ({selected_year})")
+                      title=f"Health Expenditure vs. Infant Mortality ({selected_year})")
     st.plotly_chart(fig2, use_container_width=True)
 
 # Row 2
 col3, col4 = st.columns(2)
 
-# --- Insight 3: Influence on Malnourishment ---
+#Insight 3: Influence on Malnourishment
 with col3:
-    st.subheader("3. Spending vs. Malnourishment")
+    st.subheader("3. Spending vs. Prevalence of Undernourishment")
     st.markdown("*Impact of spending on Undernourishment.*")
     
-    # Note: I am inferring the full name from your snippet 'prev_unde...'
-    # Ideally, this column is named 'prev_undernourishment' or similar.
-    # If this chart fails, check the exact spelling of this column name.
     undernourishment_col = [c for c in df.columns if "prev_unde" in c][0]
 
     fig3 = px.scatter(year_df, 
                       x="Health expenditure per capita - Total", 
-                      y=undernourishment_col,
+                      y="prev_undernourishment",
                       color="country_x",
                       hover_name="country_x",
-                      title=f"Expenditure vs. {undernourishment_col} ({selected_year})")
+                      labels = {
+                          "prev_undernourishment": "Prevalence of Undernourishment",
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
+                      }
+                      title=f"Health Expenditure vs. {undernourishment_col} ({selected_year})")
     st.plotly_chart(fig3, use_container_width=True)
 
-# --- Insight 4: Correlation Matrix ---
+#Insight 4: Correlation Matrix ---
 with col4:
     st.subheader("4. Global Correlations")
-    st.markdown("*Heatmap of relationships between all numerical features.*")
+    st.markdown("*Heatmap of the relationship between all numerical features.*")
     
     # Select only numeric columns to avoid errors
     numeric_df = filtered_df.select_dtypes(include=['float64', 'int64'])
@@ -100,4 +109,5 @@ with col4:
     
     fig4 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
     st.plotly_chart(fig4, use_container_width=True)
+
 
