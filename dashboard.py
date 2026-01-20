@@ -95,10 +95,29 @@ with col3:
                           "prev_undernourishment": "Prevalence of Undernourishment",
                           "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
                       },
-                      title=f"Health Expenditure vs. {undernourishment_col} ({selected_year})")
+                      title=f"Health Expenditure vs. Prevalence of Undernourishment ({selected_year})")
     st.plotly_chart(fig3, use_container_width=True)
 
-#Insight 4: Correlation Matrix ---
+#Insight 4: Influence on Neonatal Mortality
+with col3:
+    st.subheader("3. Spending vs. Neonatal Mortality")
+    st.markdown("*Impact of spending on Neonatal Mortality.*")
+    
+    undernourishment_col = [c for c in df.columns if "neonatal_mortality" in c][0]
+
+    fig3 = px.scatter(year_df, 
+                      x="Health expenditure per capita - Total", 
+                      y="neonatal_mortality",
+                      color="country_x",
+                      hover_name="country_x",
+                      labels = {
+                          "neonatal_mortality": "Neonatal Mortality",
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
+                      },
+                      title=f"Health Expenditure vs. Neonatal Mortality ({selected_year})")
+    st.plotly_chart(fig3, use_container_width=True)
+
+#Insight 5: Correlation Matrix ---
 with col4:
     st.subheader("4. Global Correlations")
     st.markdown("*Heatmap of the relationship between all numerical features.*")
@@ -109,6 +128,7 @@ with col4:
     
     fig4 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
     st.plotly_chart(fig4, use_container_width=True)
+
 
 
 
