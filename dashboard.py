@@ -192,8 +192,10 @@ with col5:
 st.markdown("---")
 if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
-    st.experimental_rerun()
+    st.rerun()
+    
 ## new
+
 
 
 
