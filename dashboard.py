@@ -8,7 +8,7 @@ st.set_page_config(layout="wide", page_title="Relationship between Countries' He
 # 2. Load Your Data (Cache it so it doesn't reload every interaction)
 @st.cache_data
 def load_data():
-    df = pd.read_csv(r"C:\Users\catar\Downloads\merged_health_data.csv")
+    df = pd.read_csv("merged_health_data.csv")
     return df
 
 df = load_data()
@@ -59,4 +59,5 @@ with col3:
 with col4:
     st.subheader("4. Correlation Heatmap")
     fig4 = px.imshow(filtered_df.corr(), text_auto=True, aspect="auto")
+
     st.plotly_chart(fig4, use_container_width=True)
