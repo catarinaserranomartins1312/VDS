@@ -52,7 +52,7 @@ with col1:
                       labels={
                           "life_expect": "Life Expectancy (Years)",
                           "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
-                      }
+                      },
                       hover_name="country_x",
                       title=f"Health Expenditure vs. Life Expectancy ({selected_year})")
     st.plotly_chart(fig1, use_container_width=True)
@@ -71,7 +71,7 @@ with col2:
                       labels = {
                           "infant_mortality": "Infant Mortality",
                           "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
-                      }
+                      },
                       hover_name="country_x",
                       title=f"Health Expenditure vs. Infant Mortality ({selected_year})")
     st.plotly_chart(fig2, use_container_width=True)
@@ -94,7 +94,7 @@ with col3:
                       labels = {
                           "prev_undernourishment": "Prevalence of Undernourishment",
                           "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
-                      }
+                      },
                       title=f"Health Expenditure vs. {undernourishment_col} ({selected_year})")
     st.plotly_chart(fig3, use_container_width=True)
 
@@ -109,6 +109,7 @@ with col4:
     
     fig4 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
     st.plotly_chart(fig4, use_container_width=True)
+
 
 
 
