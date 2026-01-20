@@ -145,4 +145,66 @@ with col3:
                       y=y_col_3,
                       color="country_x",
                       hover_name="country_x",
-                      labels
+                      labels={
+                          y_col_3: "Prevalence of Undernourishment",
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD)"
+                      },
+                      title=f"Expenditure vs. Undernourishment ({selected_year})")
+    
+    st.plotly_chart(
+        fig3,
+        use_container_width=True,
+        selection_mode="points",
+        on_select="rerun",
+        key="fig3"
+    )
+    update_brush("fig3")
+
+# Insight 4: Influence on Neonatal Mortality
+with col4:
+    st.subheader("4. Spending vs. Neonatal Mortality")
+    st.markdown("*Impact of spending on Neonatal Mortality.*")
+    
+    # Safe column finder
+    neonatal_cols = [c for c in df.columns if "neonatal_mortality" in c]
+    y_col_4 = neonatal_cols[0] if neonatal_cols else "infant_mortality"
+
+    fig4 = px.scatter(brushed_df, 
+                      x="Health expenditure per capita - Total", 
+                      y=y_col_4,
+                      color="country_x",
+                      hover_name="country_x",
+                      labels={
+                          y_col_4: "Neonatal Mortality",
+                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD)"
+                      },
+                      title=f"Expenditure vs. Neonatal Mortality ({selected_year})")
+    
+    st.plotly_chart(
+        fig4,
+        use_container_width=True,
+        selection_mode="points",
+        on_select="rerun",
+        key="fig4"
+    )
+    update_brush("fig4")
+
+# Grid: Row 3 (Heatmap)
+col5, col6 = st.columns(2)
+
+with col5:
+    st.subheader("5. Global Correlations")
+    st.markdown("*Heatmap of the relationship between all numerical features.*")
+    
+    # Only use numeric columns for correlation to avoid errors
+    numeric_df = brushed_df.select_dtypes(include=['float64', 'int64'])
+    corr = numeric_df.corr()
+    
+    fig5 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
+    st.plotly_chart(fig5, use_container_width=True)
+
+# --- CLEAR BUTTON ---
+st.markdown("---")
+if st.button("🔄 Clear Selection"):
+    st.session_state.selected_indices = None
+    st.rerun()
