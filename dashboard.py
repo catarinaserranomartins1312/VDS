@@ -8,6 +8,12 @@ st.set_page_config(layout="wide", page_title="Relationship between Countries' He
 if "selected_indices" not in st.session_state:
     st.session_state.selected_indices = None
 
+def update_brush(fig_key):
+    sel = st.session_state.get(fig_key, {}).get("selection", {})
+    points = sel.get("points", [])
+    if points:
+        st.session_state.selected_indices = [p["pointIndex"] for p in points]
+
 # 2. Load Your Data (Cache it so it doesn't reload every interaction)
 @st.cache_data
 def load_data():
@@ -65,20 +71,17 @@ with col1:
                       },
                       hover_name="country_x",
                       title=f"Health Expenditure vs. Life Expectancy ({selected_year})")
-    st.plotly_chart(fig1, use_container_width=True)
-    ## new
-    event1 = st.plotly_chart(
+    # st.plotly_chart(fig1, use_container_width=True)
+
+    st.plotly_chart(
         fig1,
         use_container_width=True,
         selection_mode="points",
         on_select="rerun",
         key="fig1"
     )
-
-    if event1 and event1["points"]:
-        st.session_state.selected_indices = [
-            p["pointIndex"] for p in event1["points"]
-        ]
+    
+    update_brush("fig1"
     ## new
 
 #Insight 2: Influence on Mortality
@@ -98,9 +101,9 @@ with col2:
                       },
                       hover_name="country_x",
                       title=f"Health Expenditure vs. Infant Mortality ({selected_year})")
-    st.plotly_chart(fig2, use_container_width=True)
+    # st.plotly_chart(fig2, use_container_width=True)
 
-    event2 = st.plotly_chart(
+    st.plotly_chart(
         fig2,
         use_container_width=True,
         selection_mode="points",
@@ -108,10 +111,7 @@ with col2:
         key="fig2"
     )
 
-    if event2 and event2["points"]:
-        st.session_state.selected_indices = [
-            p["pointIndex"] for p in event2["points"]
-        ]
+    update_brush("fig2")
 
 # Row 2
 col3, col4 = st.columns(2)
@@ -135,7 +135,7 @@ with col3:
                       title=f"Health Expenditure vs. Prevalence of Undernourishment ({selected_year})")
     st.plotly_chart(fig3, use_container_width=True)
 
-    event3 = st.plotly_chart(
+    st.plotly_chart(
         fig3,
         use_container_width=True,
         selection_mode="points",
@@ -143,10 +143,7 @@ with col3:
         key="fig3"
     )
 
-    if event3 and event3["points"]:
-        st.session_state.selected_indices = [
-            p["pointIndex"] for p in event3["points"]
-        ]
+    update_brush("fig3")
 
 #Insight 4: Influence on Neonatal Mortality
 with col4:
@@ -167,18 +164,15 @@ with col4:
                       title=f"Health Expenditure vs. Neonatal Mortality ({selected_year})")
     st.plotly_chart(fig4, use_container_width=True)
 
-    event4 = st.plotly_chart(
+    st.plotly_chart(
         fig4,
         use_container_width=True,
         selection_mode="points",
         on_select="rerun",
-        key="fig4"
+        key="fig3"
     )
 
-    if event4 and event4["points"]:
-        st.session_state.selected_indices = [
-            p["pointIndex"] for p in event4["points"]
-        ]
+    update_brush("fig4")
 
 #Insight 5: Correlation Matrix ---
 with col5:
@@ -197,6 +191,7 @@ if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
     st.experimental_rerun()
 ## new
+
 
 
 
