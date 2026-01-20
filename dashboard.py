@@ -49,7 +49,7 @@ with col1:
                       y="life_expect", 
                       color="country_x", 
                       size="life_expect", 
-                      labels = {
+                      labels={
                           "life_expect": "Life Expectancy (Years)",
                           "Health expenditure per capita - Total": "Health Expenditure (PPP USD, log scale)"
                       }
@@ -109,5 +109,6 @@ with col4:
     
     fig4 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
     st.plotly_chart(fig4, use_container_width=True)
+
 
 
