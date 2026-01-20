@@ -2,20 +2,15 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. Page Configuration (Must be the first command)
+# 1. Page Configuration
 st.set_page_config(layout="wide", page_title="Health Expenditure Dashboard")
 
 # --- SESSION STATE INITIALIZATION ---
+# Initialize brushing state
 if "selected_indices" not in st.session_state:
     st.session_state.selected_indices = None
 
-# Logic to maintain the Country Filter selection so it doesn't reset
-if "country_selection" not in st.session_state:
-    st.session_state["country_selection"] = []  # Will be filled after data load
-
 # --- HELPER FUNCTIONS ---
-
-# Function to update the "Brush" (selection)
 def update_brush(fig_key):
     # Get the selection state from the specific chart (fig_key)
     sel = st.session_state.get(fig_key, {}).get("selection", {})
@@ -23,37 +18,37 @@ def update_brush(fig_key):
     
     # Update global selected_indices if points are found
     if points:
-        # FIX: Changed "pointIndex" to "point_index" (snake_case fix)
+        # Uses 'point_index' (snake_case) to match new Streamlit updates
         st.session_state.selected_indices = [p["point_index"] for p in points]
 
 # 2. Load Data
 @st.cache_data
 def load_data():
-    # Ensure this matches your exact filename in GitHub
     df = pd.read_csv("merged_health_data.csv")
     return df
 
 df = load_data()
 
-# --- SIDEBAR FILTERS ---
-
+# --- SIDEBAR FILTERS (FIXED) ---
 st.sidebar.header("Filter Options")
 
-# 1. Country Filter (with Persistence Fix)
-all_countries = df['country_x'].unique()
+# Fix 1: Convert numpy array to standard list to prevent Streamlit from thinking data changed
+all_countries = df['country_x'].unique().tolist()
 
-# If session state is empty (first run), set default to first 5 countries
-if not st.session_state["country_selection"]:
-    st.session_state["country_selection"] = all_countries[:5].tolist()
+# Fix 2: Initialize the selection in session state manually
+# This prevents the widget from resetting on every rerun
+if "country_selection" not in st.session_state:
+    st.session_state["country_selection"] = all_countries[:5]
 
+# The Widget: We use 'key' to bind it to the session state we just set up.
+# We do NOT use 'default' here because 'key' handles the value.
 selected_countries = st.sidebar.multiselect(
     "Select Countries to Compare:", 
-    options=all_countries, 
-    default=st.session_state["country_selection"], 
-    key="country_selection" # This key tells Streamlit to track this widget
+    options=all_countries,
+    key="country_selection" 
 )
 
-# 2. Year Filter
+# Year Filter
 min_year = int(df['year'].min())
 max_year = int(df['year'].max())
 selected_year = st.sidebar.slider("Select Year", min_year, max_year, max_year)
@@ -98,7 +93,6 @@ with col1:
                       hover_name="country_x",
                       title=f"Expenditure vs. Life Expectancy ({selected_year})")
     
-    # Interaction Layer
     st.plotly_chart(
         fig1,
         use_container_width=True,
@@ -144,84 +138,11 @@ with col3:
     
     # Safe column finder
     undernourish_cols = [c for c in df.columns if "prev_unde" in c]
-    y_col_3 = undernourish_cols[0] if undernourish_cols else "life_expect" # Fallback
+    y_col_3 = undernourish_cols[0] if undernourish_cols else "life_expect"
 
     fig3 = px.scatter(brushed_df, 
                       x="Health expenditure per capita - Total", 
                       y=y_col_3,
                       color="country_x",
                       hover_name="country_x",
-                      labels={
-                          y_col_3: "Prevalence of Undernourishment",
-                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD)"
-                      },
-                      title=f"Expenditure vs. Undernourishment ({selected_year})")
-    
-    st.plotly_chart(
-        fig3,
-        use_container_width=True,
-        selection_mode="points",
-        on_select="rerun",
-        key="fig3"
-    )
-    update_brush("fig3")
-
-# Insight 4: Influence on Neonatal Mortality
-with col4:
-    st.subheader("4. Spending vs. Neonatal Mortality")
-    st.markdown("*Impact of spending on Neonatal Mortality.*")
-    
-    # Safe column finder
-    neonatal_cols = [c for c in df.columns if "neonatal_mortality" in c]
-    y_col_4 = neonatal_cols[0] if neonatal_cols else "infant_mortality" # Fallback
-
-    fig4 = px.scatter(brushed_df, 
-                      x="Health expenditure per capita - Total", 
-                      y=y_col_4,
-                      color="country_x",
-                      hover_name="country_x",
-                      labels={
-                          y_col_4: "Neonatal Mortality",
-                          "Health expenditure per capita - Total": "Health Expenditure (PPP USD)"
-                      },
-                      title=f"Expenditure vs. Neonatal Mortality ({selected_year})")
-    
-    st.plotly_chart(
-        fig4,
-        use_container_width=True,
-        selection_mode="points",
-        on_select="rerun",
-        key="fig4"
-    )
-    update_brush("fig4")
-
-# Grid: Row 3 (Heatmap)
-col5, col6 = st.columns(2)
-
-with col5:
-    st.subheader("5. Global Correlations")
-    st.markdown("*Heatmap of the relationship between all numerical features.*")
-    
-    # Only use numeric columns for correlation to avoid errors
-    numeric_df = brushed_df.select_dtypes(include=['float64', 'int64'])
-    corr = numeric_df.corr()
-    
-    fig5 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
-    st.plotly_chart(fig5, use_container_width=True)
-
-# --- CLEAR BUTTON ---
-st.markdown("---")
-if st.button("🔄 Clear Selection"):
-    st.session_state.selected_indices = None
-    st.rerun() # FIX: Updated from st.experimental_rerun()
-
-
-
-
-
-
-
-
-
-
-
+                      labels
