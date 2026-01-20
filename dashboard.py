@@ -19,8 +19,8 @@ st.sidebar.header("Filter Options")
 # Example: Filter by category
 selected_category = st.sidebar.multiselect(
     "Select Category:",
-    options=df["category"].unique(),
-    default=df["category"].unique()
+    options=df["Health expenditure per capita - Total"].unique(),
+    default=df["life_expect"].unique()
 )
 # Filter the dataframe based on selection
 filtered_df = df[df["category"].isin(selected_category)]
@@ -62,4 +62,5 @@ with col4:
     fig4 = px.imshow(filtered_df.corr(), text_auto=True, aspect="auto")
 
     st.plotly_chart(fig4, use_container_width=True)
+
 
