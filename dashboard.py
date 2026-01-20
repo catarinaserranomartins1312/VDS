@@ -45,7 +45,7 @@ if "country_selection" not in st.session_state:
 selected_countries = st.sidebar.multiselect(
     "Select Countries to Compare:", 
     options=all_countries,
-    key="country_selection" 
+    key="country_selection"
 )
 
 # Year Filter
@@ -208,3 +208,4 @@ st.markdown("---")
 if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
     st.rerun()
+
