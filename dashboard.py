@@ -12,7 +12,7 @@ def load_data():
     return df
 
 df = load_data()
-st.write(df.columns)
+#st.write(df.columns)
 
 all_countries = df['country_x'].unique()
 selected_countries = st.sidebar.multiselect(
@@ -100,3 +100,4 @@ with col4:
     
     fig4 = px.imshow(corr, text_auto=False, aspect="auto", title="Correlation Heatmap")
     st.plotly_chart(fig4, use_container_width=True)
+
