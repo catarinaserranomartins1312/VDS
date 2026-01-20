@@ -12,7 +12,7 @@ def update_brush(fig_key):
     sel = st.session_state.get(fig_key, {}).get("selection", {})
     points = sel.get("points", [])
     if points:
-        st.session_state.selected_indices = [p["pointIndex"] for p in points]
+        st.session_state.selected_indices = [p["point_index"] for p in points]
 
 # 2. Load Your Data (Cache it so it doesn't reload every interaction)
 @st.cache_data
@@ -194,6 +194,7 @@ if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = None
     st.experimental_rerun()
 ## new
+
 
 
 
