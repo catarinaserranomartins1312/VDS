@@ -2,17 +2,17 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# 1. PAGE CONFIG
+# config page
 st.set_page_config(layout="wide", page_title="Health Expenditure Dashboard")
 
-# 2. SESSION STATE SETUP
+# setup settings
 if "selected_indices" not in st.session_state:
     st.session_state.selected_indices = []
 
 if "country_selection" not in st.session_state:
     st.session_state.country_selection = [] 
 
-# 3. DATA LOADING
+# upload data 
 @st.cache_data
 def load_data():
     df = pd.read_csv("merged_health_data.csv")
@@ -20,17 +20,21 @@ def load_data():
 
 df = load_data()
 
-# sidebar filter
+# sidebar filters
 st.sidebar.header("Filter Options")
 
+
 # Prevent reset bug
-all_countries = df["country_x"].unique().tolist()
+all_countries = sorted(df["country_x"].unique().tolist())
+
+# Default to 5 countries if nothing selected yet
 if not st.session_state.country_selection:
     st.session_state.country_selection = all_countries[:5]
 
 selected_countries = st.sidebar.multiselect(
     "Select Countries to Compare",
     options=all_countries,
+    default=st.session_state.country_selection,
     key="country_selection"
 )
 
@@ -40,28 +44,17 @@ selected_year = st.sidebar.slider("Select Year", min_year, max_year, max_year)
 
 # base data in year filter
 year_df = df[
-    (df["country_x"].isin(selected_countries)) & 
+    (df["country_x"].isin(selected_countries)) &
     (df["year"] == selected_year)
-]
-
-# brushing
-def update_brush(fig_key):
-    sel = st.session_state.get(fig_key, {}).get("selection", {})
-    points = sel.get("points", [])
-    if points:
-        st.session_state.selected_indices = [p["point_index"] for p in points]
-
-# filtered dataframe after brushing
-if st.session_state.selected_indices:
-    brushed_df = year_df.iloc[st.session_state.selected_indices]
-else:
-    brushed_df = year_df  # If nothing selected, show everything
+].copy()
 
 # dashboard initial settings
 st.title("Analysis: Health Expenditure vs. Health Indicators")
 st.markdown(f"Exploring relationships for the year **{selected_year}**.")
 
 col1, col2 = st.columns(2)
+
+BRUSH_KEY = "preston_brush"
 
 # insight 1: variation of a preston curve
 with col1:
@@ -79,12 +72,27 @@ with col1:
         labels={"life_expect": "Life Expectancy", "Health expenditure per capita - Total": "Health Expenditure"},
         title="Expenditure vs. Life Expectancy"
     )
-    # The interaction source
-    st.plotly_chart(
-        fig1, use_container_width=True,
-        selection_mode="points", on_select="rerun", key="fig1"
+
+    fig1.update_layout(dragmode="select")
+    
+event = st.plotly_chart(
+        fig1,
+        use_container_width=True,
+        selection_mode="points",          
+        on_select="rerun",
+        key=BRUSH_KEY
     )
-    update_brush("fig1")
+
+selected_points = st.session_state.get(f"_{BRUSH_KEY}_selected", {}).get("points", [])
+
+if selected_points:
+    # point_index refers to the row index in the data passed to px.scatter
+    selected_indices = [p["point_index"] for p in selected_points]
+    brushed_df = year_df.iloc[selected_indices]
+    st.session_state.selected_rows = selected_indices
+else:
+    brushed_df = year_df
+    st.session_state.selected_rows = []
 
 # insight 2 - impact of spending in infant mortality
 with col2:
@@ -154,9 +162,11 @@ with col5:
     else:
         st.info("Select more points to see correlations.")
 
-# CLEAR BUTTON
-st.markdown("---")
-if st.button("🔄 Clear Selection"):
-    st.session_state.selected_indices = []
+# Reset button
+if st.button("Clear Selection"):
+    if f"_{BRUSH_KEY}_selected" in st.session_state:
+        del st.session_state[f"_{BRUSH_KEY}_selected"]
+    st.session_state.selected_rows = []
     st.rerun()
+
 
