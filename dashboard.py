@@ -20,7 +20,7 @@ def load_data():
 
 df = load_data()
 
-# 4. SIDEBAR FILTERS
+# sidebar filter
 st.sidebar.header("Filter Options")
 
 # Prevent reset bug
@@ -38,33 +38,32 @@ min_year = int(df["year"].min())
 max_year = int(df["year"].max())
 selected_year = st.sidebar.slider("Select Year", min_year, max_year, max_year)
 
-# 5. DATA PREPARATION
-# Base Data for this Year
+# base data in year filter
 year_df = df[
     (df["country_x"].isin(selected_countries)) & 
     (df["year"] == selected_year)
 ]
 
-# 6. BRUSHING LOGIC
+# brushing
 def update_brush(fig_key):
     sel = st.session_state.get(fig_key, {}).get("selection", {})
     points = sel.get("points", [])
     if points:
         st.session_state.selected_indices = [p["point_index"] for p in points]
 
-# Create the Filtered Dataframe
+# filtered dataframe after brushing
 if st.session_state.selected_indices:
     brushed_df = year_df.iloc[st.session_state.selected_indices]
 else:
     brushed_df = year_df  # If nothing selected, show everything
 
-# 7. DASHBOARD LAYOUT
+# dashboard initial settings
 st.title("Analysis: Health Expenditure vs. Health Indicators")
 st.markdown(f"Exploring relationships for the year **{selected_year}**.")
 
 col1, col2 = st.columns(2)
 
-# --- CHART 1: THE "CONTROLLER" ---
+# insight 1: variation of a preston curve
 with col1:
     st.subheader("1. Preston Curve (Selector)")
     st.caption("Click points here to filter the other charts!")
@@ -87,7 +86,7 @@ with col1:
     )
     update_brush("fig1")
 
-# --- CHART 2: REACTIVE ---
+# insight 2 - impact of spending in infant mortality
 with col2:
     st.subheader("2. Spending vs. Infant Mortality")
     
@@ -100,13 +99,13 @@ with col2:
         size="infant_mortality",
         hover_name="country_x",
         labels={"infant_mortality": "Infant Mortality", "Health expenditure per capita - Total": "Health Expenditure"},
-        title="Expenditure vs. Infant Mortality (Filtered)"
+        title="Expenditure vs. Infant Mortality"
     )
     st.plotly_chart(fig2, use_container_width=True)
 
 col3, col4 = st.columns(2)
 
-# --- CHART 3: REACTIVE ---
+# insight 3 - impact of spending in Undernourishment
 with col3:
     st.subheader("3. Spending vs. Undernourishment")
     under_cols = [c for c in df.columns if "prev_unde" in c]
@@ -120,11 +119,11 @@ with col3:
         color="country_x",
         hover_name="country_x",
         labels={y_col_3: "Undernourishment", "Health expenditure per capita - Total": "Health Expenditure"},
-        title="Expenditure vs. Undernourishment (Filtered)"
+        title="Expenditure vs. Undernourishment"
     )
     st.plotly_chart(fig3, use_container_width=True)
 
-# --- CHART 4: REACTIVE ---
+# insight 4 - impact of spending in Neonatal Mortality
 with col4:
     st.subheader("4. Spending vs. Neonatal Mortality")
     neo_cols = [c for c in df.columns if "neonatal_mortality" in c]
@@ -138,12 +137,12 @@ with col4:
         color="country_x",
         hover_name="country_x",
         labels={y_col_4: "Neonatal Mortality", "Health expenditure per capita - Total": "Health Expenditure"},
-        title="Expenditure vs. Neonatal Mortality (Filtered)"
+        title="Expenditure vs. Neonatal Mortality"
     )
     st.plotly_chart(fig4, use_container_width=True)
 
-# --- HEATMAP ---
-st.subheader("5. Global Correlations (Filtered)")
+# insight 5 - correlation between the variables
+st.subheader("5. Global Correlations")
 col5, _ = st.columns(2)
 with col5:
     # Use brushed_df for heatmap too
@@ -160,3 +159,4 @@ st.markdown("---")
 if st.button("🔄 Clear Selection"):
     st.session_state.selected_indices = []
     st.rerun()
+
